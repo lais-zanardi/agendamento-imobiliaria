@@ -9,8 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -20,48 +19,33 @@ public class AgendamentoController {
     private final RabbitTemplate rabbitTemplate;
 
     @PostMapping
-    public ResponseEntity<Void> criarAgendamento(@RequestBody AgendamentoDTO agendamentoDTO) {
-        Agendamento agendamento = service.criarAgendamento(agendamentoDTO);
+    public ResponseEntity<Void> criarAgendamento(@RequestBody Agendamento agendamento) {
+        service.criarAgendamento(agendamento);
         rabbitTemplate.convertAndSend("agendamento.exchange", "agendamento.criado", agendamento.getId());
-        return ResponseEntity.created(URI.create("/visits/" + agendamento.getId())).build();
+        return ResponseEntity.created(URI.create("/agendamento" + agendamento.getId())).build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> atualizarAgendamento(@PathVariable Long id, @RequestBody AgendamentoDTO agendamentoDTO) {
         service.atualizarAgendamento(id, agendamentoDTO);
-        rabbitTemplate.convertAndSend("visit.exchange", "visit.updated", id);
+        rabbitTemplate.convertAndSend("agendamento.exchange", "agendamento.updated", id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVisit(@PathVariable Long id) {
         service.deletarAgendamento(id);
-        rabbitTemplate.convertAndSend("visit.exchange", "visit.deleted", id);
+        rabbitTemplate.convertAndSend("agendamento.exchange", "agendamento.deleted", id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AgendamentoDTO> getVisit(@PathVariable Long id) {
-        Agendamento agendamento = service.buscarAgendamento(id);
-        AgendamentoDTO agendamentoDTO = new AgendamentoDTO(agendamento);
-        return ResponseEntity.ok(agendamentoDTO);
+    public ResponseEntity<Agendamento> getVisit(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarAgendamento(id));
     }
 
-    @GetMapping("/corretor/{id}")
-    public ResponseEntity<List<AgendamentoDTO>> getAgendamentosPorCorretor(@PathVariable Long id) {
-        List<Agendamento> agendamentos = service.getAgendamentoPorCorretor(id);
-        List<AgendamentoDTO> agendamentosDTO = agendamentos.stream().map(AgendamentoDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok(agendamentosDTO);
-    }
+}
 
-    @GetMapping("/cliente/{id}")
-    public ResponseEntity<List<AgendamentoDTO>> getAgendamentosPorCliente(@PathVariable Long id) {
-        List<Agendamento> agendamentos = service.getAgendamentosPorCliente(id);
-        List<AgendamentoDTO> agendamentosDTO = agendamentos.stream().map(AgendamentoDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok(agendamentosDTO);
-    }
-}
-}
 
 
 

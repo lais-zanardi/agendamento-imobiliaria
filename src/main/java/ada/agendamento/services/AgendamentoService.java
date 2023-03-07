@@ -3,12 +3,12 @@ package ada.agendamento.services;
 import ada.agendamento.dto.AgendamentoDTO;
 import ada.agendamento.entities.Agendamento;
 import ada.agendamento.repositories.AgendamentoRepository;
-
+import ada.agendamento.exceptions.NotFoundException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -23,23 +23,15 @@ public class AgendamentoService {
         private static final String EXCHANGE_NAME = "agendamento.exchange";
         private static final String ROUTING_KEY = "agendamento.created";
 
-        public Agendamento criarAgendamento(AgendamentoDTO agendamentoDTO) {
-            Corretor corretor = new Corretor();
-            corretor.setId(AgendamentoDTO.getCorretorId());
-            Cliente cliente = new Cliente();
-            cliente.setId(agendamentoDTO.getClienteId());
-            Imovel imovel = new Imovel();
-            imovel.setId(agendamentoDTO.getImovelId());
-
-            Agendamento agendamento = new Agendamento();
-            agendamento.setCorretor(corretor);
-            agendamento.setCliente(cliente);
-            agendamento.setImovel(imovel);
-            agendamento.setHorario(agendamentoDTO.getHorario());
+        public Agendamento criarAgendamento(Agendamento agendamento) {
 
             Agendamento agendamentoSalvo = repository.save(agendamento);
             rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, agendamentoSalvo.getId());
-            return agendamentoSalvo;
+            return repository.findByHorarioAndEnderecoAndCorretor(
+                    agendamento.getHorario(),
+                    agendamento.getEnderecoImovel(),
+                    agendamento.getNomeCorretor())
+                    .orElse(repository.save(agendamento));
         }
 
         public Agendamento atualizarAgendamento(Long id, AgendamentoDTO agendamentoDTO) {
@@ -69,15 +61,4 @@ public class AgendamentoService {
             return repository.findById(id)
                     .orElseThrow(() -> new NotFoundException("Agendamento não encontrado"));
         }
-
-        public List<Agendamento> getAgendamentosPorCorretor(Long id) {
-            return repository.findByCorretorId(id);
-        }
-
-        public List<Agendamento> getAgendamentosPorCliente(Long id) {
-            return repository.findByClienteId(id);
-        }
     }
-
-
-}

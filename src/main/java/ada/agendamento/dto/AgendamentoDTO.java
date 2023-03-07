@@ -1,6 +1,7 @@
 package ada.agendamento.dto;
 
 import ada.agendamento.entities.Agendamento;
+import ada.agendamento.entities.Cliente;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,21 +9,13 @@ import java.time.LocalDateTime;
 public class AgendamentoDTO {
     private Long id;
     private LocalDateTime horario;
-    private ClienteDTO nomeCliente;
-    private ImovelDTO enderecoImovel;
-    private CorretorDTO nomeCorretor;
-    private CorretorDTO telefoneCorretor;
+    private String nomeCliente;
+    private String enderecoImovel;
+    private String nomeCorretor;
+    private String telefoneCorretor;
 
     public AgendamentoDTO() {
     }
 
-    public AgendamentoDTO(Agendamento agendamento) {
-        this.id = agendamento.getId();
-        this.horario = agendamento.getHorario();
-        this.nomeCorretor = new CorretorDTO(agendamento.getCorretor().getNomeCorretor);
-        this.enderecoImovel = new ImovelDTO(agendamento.getImovel().getEndereco());
-        this.nomeCliente = new ClienteDTO(agendamento.getCliente().getNomeCliente());
-        this.nomeCliente = new ClienteDTO(agendamento.getCliente().getTelefoneCliente());
-    }
 
 }
